@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BotGuard — Passive Human Verification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #111118;
+  --surface2: #18181f;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e8e8f0;
+  --muted: #6b6b80;
+  --accent: #7c6aff;
+  --accent2: #a78bfa;
+  --green: #22d3a0;
+  --amber: #f59e0b;
+  --red: #f43f5e;
+  --mono: 'Space Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(124,106,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,106,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* ── HEADER ── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 0;
+}
+.hdr-inner {
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--sans); font-weight: 800; font-size: 18px; letter-spacing: -0.5px;
+}
+.logo-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.8); }
+}
+.badge {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  padding: 3px 8px; border-radius: 3px;
+  background: rgba(124,106,255,0.12); color: var(--accent2);
+  border: 1px solid rgba(124,106,255,0.25);
+}
+
+/* ── HERO ── */
+.hero { padding: 60px 0 40px; }
+.hero h1 {
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 800; line-height: 1.05;
+  letter-spacing: -1.5px;
+  background: linear-gradient(135deg, #e8e8f0 0%, #a78bfa 60%, #7c6aff 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+}
+.hero p {
+  font-size: 16px; color: var(--muted); max-width: 500px; line-height: 1.7;
+  font-family: var(--mono);
+}
+
+/* ── MAIN LAYOUT ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  padding-bottom: 60px;
+}
+@media (max-width: 800px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+/* ── DEMO PORTAL ── */
+.portal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.portal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.portal-header span { font-size: 13px; color: var(--muted); font-family: var(--mono); }
+.dots { display: flex; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.r { background: #ff5f57; }
+.dot.y { background: #ffbd2e; }
+.dot.g { background: #28c840; }
+.portal-url {
+  flex: 1; text-align: center;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  background: var(--surface2); padding: 4px 12px; border-radius: 4px;
+}
+
+.portal-body { padding: 32px 28px; }
+
+.portal-body h2 {
+  font-size: 22px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px;
+}
+.portal-body .subtitle {
+  font-size: 13px; color: var(--muted); font-family: var(--mono); margin-bottom: 28px;
+}
+
+.form-row { margin-bottom: 16px; }
+.form-row label {
+  display: block; font-size: 11px; font-family: var(--mono);
+  color: var(--muted); margin-bottom: 6px; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.form-row input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 14px;
+  color: var(--text);
+  font-family: var(--mono); font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-row input:focus { border-color: var(--accent); }
+.form-row input::placeholder { color: var(--muted); }
+
+.submit-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--sans); font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 8px;
+  letter-spacing: -0.3px;
+}
+.submit-btn:hover { background: var(--accent2); }
+.submit-btn:active { transform: scale(0.99); }
+
+/* Watching indicator */
+.watching {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  padding: 10px 0 0;
+}
+.watch-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ── SIDEBAR: SCORE PANEL ── */
+.sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+.score-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+.score-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 12px;
+}
+
+/* Gauge */
+.gauge-wrap { position: relative; margin: 0 auto 16px; width: 160px; height: 100px; }
+canvas#gauge { display: block; }
+
+.score-number {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 36px; font-weight: 700;
+  transition: color 0.5s;
+}
+.score-sublabel {
+  text-align: center;
+  font-family: var(--mono); font-size: 11px; margin-bottom: 16px;
+}
+
+/* Decision badge */
+.decision {
+  text-align: center; padding: 8px 16px;
+  border-radius: 6px; font-family: var(--mono);
+  font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+  transition: all 0.4s;
+}
+.decision.pass { background: rgba(34,211,160,0.12); color: var(--green); border: 1px solid rgba(34,211,160,0.3); }
+.decision.challenge { background: rgba(245,158,11,0.12); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+.decision.block { background: rgba(244,63,94,0.12); color: var(--red); border: 1px solid rgba(244,63,94,0.3); }
+.decision.pending { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+
+/* Signal bars */
+.signals-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+.signal-row { margin-bottom: 14px; }
+.signal-row:last-child { margin-bottom: 0; }
+.signal-meta {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 5px;
+}
+.signal-name { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.signal-val { font-family: var(--mono); font-size: 11px; color: var(--text); }
+.bar-track {
+  height: 4px; background: var(--surface2);
+  border-radius: 2px; overflow: hidden;
+}
+.bar-fill {
+  height: 100%; border-radius: 2px;
+  transition: width 0.6s cubic-bezier(.16,1,.3,1), background 0.5s;
+}
+
+/* Flags */
+.flags-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 20px;
+}
+.flags-title {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+}
+.flag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.flag-tag {
+  font-family: var(--mono); font-size: 10px;
+  padding: 3px 8px; border-radius: 3px;
+  background: rgba(244,63,94,0.1); color: var(--red);
+  border: 1px solid rgba(244,63,94,0.2);
+}
+.no-flags {
+  font-family: var(--mono); font-size: 11px; color: var(--green);
+}
+
+/* Raw telemetry */
+.telem-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.telem-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.telem-header span { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.telem-body {
+  padding: 12px 16px;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--accent2); line-height: 1.8;
+  max-height: 180px; overflow-y: auto;
+}
+.telem-body::-webkit-scrollbar { width: 3px; }
+.telem-body::-webkit-scrollbar-track { background: transparent; }
+.telem-body::-webkit-scrollbar-thumb { background: var(--border2); }
+.tl { color: var(--muted); }
+
+/* Challenge overlay */
+.challenge-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  align-items: center; justify-content: center;
+}
+.challenge-overlay.active { display: flex; }
+.challenge-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 380px; width: 100%;
+  text-align: center;
+}
+.challenge-box h3 {
+  font-size: 20px; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.5px;
+}
+.challenge-box p { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 28px; line-height: 1.7; }
+.challenge-target-area {
+  position: relative; height: 100px;
+  background: var(--surface2); border-radius: 10px;
+  margin-bottom: 16px; overflow: hidden;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+.challenge-target {
+  position: absolute;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  transition: all 0.4s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 0 20px rgba(124,106,255,0.4);
+  cursor: pointer;
+  user-select: none;
+}
+.challenge-hint { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.challenge-close {
+  margin-top: 20px;
+  background: none; border: 1px solid var(--border);
+  color: var(--muted); font-family: var(--mono); font-size: 11px;
+  padding: 8px 20px; border-radius: 6px; cursor: pointer;
+}
+
+/* Footer note */
+.footer-note {
+  border-top: 1px solid var(--border);
+  padding: 24px 0;
+  display: flex; gap: 32px; flex-wrap: wrap;
+}
+.note-item { display: flex; align-items: flex-start; gap: 10px; }
+.note-icon { font-size: 14px; margin-top: 2px; }
+.note-text { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.6; }
+.note-text strong { color: var(--text); }
+
+/* Animate in */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.portal, .sidebar > * {
+  animation: fadeUp 0.5s ease both;
+}
+.sidebar > *:nth-child(1) { animation-delay: 0.1s; }
+.sidebar > *:nth-child(2) { animation-delay: 0.2s; }
+.sidebar > *:nth-child(3) { animation-delay: 0.3s; }
+.sidebar > *:nth-child(4) { animation-delay: 0.4s; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hdr-inner">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        BotGuard
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span class="badge">v1.0 · DEMO</span>
+        <span class="badge" id="api-status">⬤ OFFLINE (DEMO MODE)</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>No CAPTCHAs.<br>Just intelligence.</h1>
+    <p>Passively monitors mouse movement, keystroke rhythm, device entropy, and session dynamics to distinguish humans from bots — silently.</p>
+  </div>
+
+  <div class="main-grid">
+    <!-- LEFT: Demo login form -->
+    <div>
+      <div class="portal">
+        <div class="portal-header">
+          <div class="dots">
+            <div class="dot r"></div>
+            <div class="dot y"></div>
+            <div class="dot g"></div>
+          </div>
+          <div class="portal-url">enterprise-portal.internal · Secure Login</div>
+        </div>
+        <div class="portal-body">
+          <h2>Welcome back</h2>
+          <div class="subtitle">// Sign in to your account</div>
+
+          <div class="form-row">
+            <label>Email address</label>
+            <input type="email" id="inp-email" placeholder="you@company.com" autocomplete="off">
+          </div>
+          <div class="form-row">
+            <label>Password</label>
+            <input type="password" id="inp-pass" placeholder="••••••••••" autocomplete="off">
+          </div>
+
+          <button class="submit-btn" id="submit-btn" onclick="handleSubmit()">
+            Sign in to portal
+          </button>
+
+          <div class="watching">
+            <div class="watch-dot"></div>
+            <span id="watch-msg">BotGuard is observing session behavior…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Telemetry feed -->
+      <div class="telem-card" style="margin-top:16px;">
+        <div class="telem-header">
+          <span>Live signal feed</span>
+          <span id="event-count">0 events</span>
+        </div>
+        <div class="telem-body" id="telem-feed">
+          <span style="color:var(--muted)">// Waiting for interaction…</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Score panel -->
+    <div class="sidebar">
+
+      <!-- Gauge -->
+      <div class="score-card">
+        <div class="score-label">Human confidence score</div>
+        <div class="gauge-wrap">
+          <canvas id="gauge" width="160" height="100"></canvas>
+          <div class="score-number" id="score-num">—</div>
+        </div>
+        <div class="score-sublabel" id="score-sub" style="color:var(--muted)">Awaiting signals…</div>
+        <div class="decision pending" id="decision-badge">PENDING VERIFICATION</div>
+      </div>
+
+      <!-- Signal breakdown -->
+      <div class="signals-card">
+        <div class="score-label">Signal breakdown</div>
+
+        <div class="signal-row">
+          <div class="signal-meta">
+            <span class="signal-name">Mouse biometrics</span>
+            <span class="signal-val" id="sv-mouse">—</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" id="sb-mouse" style="width:0%;background:var(--accent)"></div></div>
+        </div>
+
+        <div class="signal-row">
+          <div class="signal-meta">
+            <span class="signal-name">Keystroke dynamics</span>
+            <span class="signal-val" id="sv-key">—</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" id="sb-key" style="width:0%;background:var(--accent)"></div></div>
+        </div>
+
+        <div class="signal-row">
+          <div class="signal-meta">
+            <span class="signal-name">Device entropy</span>
+            <span class="signal-val" id="sv-dev">—</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" id="sb-dev" style="width:0%;background:var(--accent)"></div></div>
+        </div>
+
+        <div class="signal-row">
+          <div class="signal-meta">
+            <span class="signal-name">Session timing</span>
+            <span class="signal-val" id="sv-time">—</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" id="sb-time" style="width:0%;background:var(--accent)"></div></div>
+        </div>
+      </div>
+
+      <!-- Flags -->
+      <div class="flags-card">
+        <div class="flags-title">Anomaly flags</div>
+        <div class="flag-list" id="flag-list">
+          <span class="no-flags">// No flags detected</span>
+        </div>
+      </div>
+
+      <!-- Simulate buttons -->
+      <div class="signals-card">
+        <div class="score-label">Simulation controls</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button onclick="simulateHuman()" style="padding:9px;background:rgba(34,211,160,0.1);color:var(--green);border:1px solid rgba(34,211,160,0.25);border-radius:7px;font-family:var(--mono);font-size:11px;cursor:pointer;">▶ Human session</button>
+          <button onclick="simulateBot()" style="padding:9px;background:rgba(244,63,94,0.1);color:var(--red);border:1px solid rgba(244,63,94,0.25);border-radius:7px;font-family:var(--mono);font-size:11px;cursor:pointer;">⚡ Bot session</button>
+        </div>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:10px;line-height:1.6;">
+          Inject synthetic signal payloads to see how the classifier responds. Or just interact with the form above naturally.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-note">
+    <div class="note-item">
+      <div class="note-icon">🔒</div>
+      <div class="note-text"><strong>Privacy-first</strong><br>No key content captured.<br>Only timing metadata.</div>
+    </div>
+    <div class="note-item">
+      <div class="note-icon">⚡</div>
+      <div class="note-text"><strong>Sub-10ms inference</strong><br>Weighted ensemble of<br>GBT + LSTM + IsoForest.</div>
+    </div>
+    <div class="note-item">
+      <div class="note-icon">🧩</div>
+      <div class="note-text"><strong>Drop-in SDK</strong><br>Works with React, Angular,<br>Vue, vanilla JS.</div>
+    </div>
+    <div class="note-item">
+      <div class="note-icon">🔁</div>
+      <div class="note-text"><strong>Adaptive thresholds</strong><br>Weekly retraining on<br>labeled session data.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Challenge Overlay -->
+<div class="challenge-overlay" id="challenge-overlay">
+  <div class="challenge-box">
+    <h3>Quick check needed</h3>
+    <p>Our system needs a little more signal to verify you're human. Tap the moving circle once.</p>
+    <div class="challenge-target-area" id="challenge-area">
+      <div class="challenge-target" id="challenge-target">👆</div>
+    </div>
+    <div class="challenge-hint" id="challenge-hint">Move your cursor to the glowing circle…</div>
+    <button class="challenge-close" onclick="closeChallenge()">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// BotGuard SDK — Signal Collector
+// ═══════════════════════════════════════════
+
+const SDK = (() => {
+  const state = {
+    sessionId: 'sess_' + Math.random().toString(36).slice(2, 10),
+    startTime: Date.now(),
+    mouse: [],
+    keys: [],
+    scrolls: [],
+    device: {},
+    eventCount: 0,
+  };
+
+  // Device fingerprint
+  function collectDevice() {
+    const d = {};
+    d.screen_w = screen.width;
+    d.screen_h = screen.height;
+    d.pixel_ratio = window.devicePixelRatio || 1;
+    d.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    d.platform = navigator.platform || '';
+    d.lang = navigator.language;
+    d.cores = navigator.hardwareConcurrency || 0;
+    d.touch_capable = 'ontouchstart' in window;
+    d.mouse_events = true;
+    d.webgl = !!document.createElement('canvas').getContext('webgl');
+
+    // Canvas hash
+    try {
+      const c = document.createElement('canvas');
+      const ctx = c.getContext('2d');
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillStyle = '#f60';
+      ctx.fillRect(125, 1, 62, 20);
+      ctx.fillStyle = '#069';
+      ctx.fillText('BotGuard🤖', 2, 15);
+      d.canvas_hash = c.toDataURL().slice(-20);
+    } catch(e) { d.canvas_hash = null; }
+
+    // Audio fingerprint
+    try {
+      const ac = new AudioContext();
+      d.audio_hash = ac.sampleRate + '_' + (ac.destination.channelCount || 0);
+      ac.close();
+    } catch(e) { d.audio_hash = null; }
+
+    // Font probe
+    const fonts = ['Arial', 'Courier New', 'Georgia', 'Times New Roman',
+                   'Verdana', 'Helvetica', 'Comic Sans MS', 'Impact'];
+    let count = 0;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.font = '12px monospace';
+    const baseline = ctx.measureText('mmm').width;
+    fonts.forEach(f => {
+      ctx.font = `12px '${f}', monospace`;
+      if (ctx.measureText('mmm').width !== baseline) count++;
+    });
+    d.font_count = count;
+
+    state.device = d;
+    return d;
+  }
+
+  // Mouse capture
+  function onMouseMove(e) {
+    if (state.mouse.length < 2000) {
+      state.mouse.push({ t: Date.now(), x: e.clientX, y: e.clientY, type: 'move' });
+      state.eventCount++;
+      logTelemetry(`mouse.move x=${e.clientX} y=${e.clientY}`);
+    }
+  }
+  function onMouseClick(e) {
+    state.mouse.push({ t: Date.now(), x: e.clientX, y: e.clientY, type: 'click' });
+    state.eventCount++;
+    logTelemetry(`mouse.click x=${e.clientX} y=${e.clientY}`);
+  }
+
+  // Key capture (timing only — no key identity for privacy)
+  function onKeyDown(e) {
+    // Use anonymized code categories
+    const cat = e.key.length === 1 ? 'CHAR' :
+                e.key === 'Backspace' ? 'BKSP' :
+                e.key === ' ' ? 'SPACE' : 'CTRL';
+    state.keys.push({ t: Date.now(), type: 'down', code: cat });
+    state.eventCount++;
+    logTelemetry(`key.down code=${cat}`);
+  }
+  function onKeyUp(e) {
+    const cat = e.key.length === 1 ? 'CHAR' :
+                e.key === 'Backspace' ? 'BKSP' :
+                e.key === ' ' ? 'SPACE' : 'CTRL';
+    state.keys.push({ t: Date.now(), type: 'up', code: cat });
+  }
+
+  // Scroll
+  function onScroll() {
+    state.scrolls.push({ t: Date.now(), dy: window.scrollY, total: window.scrollY });
+    logTelemetry(`scroll y=${window.scrollY}`);
+  }
+
+  function getPayload() {
+    return {
+      session_id: state.sessionId,
+      mouse: state.mouse.slice(-300),
+      keys: state.keys.slice(-200),
+      scrolls: state.scrolls.slice(-50),
+      device: state.device,
+      timing: {
+        time_to_interact: state.mouse.length > 0
+          ? state.mouse[0].t - state.startTime
+          : 9999,
+        session_duration: Date.now() - state.startTime,
+        request_count: state.eventCount,
+      }
+    };
+  }
+
+  function init() {
+    collectDevice();
+    document.addEventListener('mousemove', onMouseMove, { passive: true });
+    document.addEventListener('click', onMouseClick, { passive: true });
+    document.addEventListener('keydown', onKeyDown, { passive: true });
+    document.addEventListener('keyup', onKeyUp, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  return { init, getPayload, state };
+})();
+
+SDK.init();
+
+// ═══════════════════════════════════════════
+// UI Helpers
+// ═══════════════════════════════════════════
+
+const API_URL = 'http://localhost:8000/v1/verify';
+let telemLines = [];
+
+function logTelemetry(msg) {
+  const now = new Date();
+  const ts = `${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}.${now.getMilliseconds().toString().padStart(3,'0')}`;
+  telemLines.push(`<span class="tl">[${ts}]</span> ${msg}`);
+  if (telemLines.length > 40) telemLines.shift();
+
+  const feed = document.getElementById('telem-feed');
+  feed.innerHTML = telemLines.join('<br>');
+  feed.scrollTop = feed.scrollHeight;
+
+  document.getElementById('event-count').textContent =
+    SDK.state.eventCount + ' events';
+}
+
+function getBarColor(score) {
+  if (score > 0.75) return 'var(--green)';
+  if (score > 0.5) return 'var(--amber)';
+  return 'var(--red)';
+}
+
+function updateUI(result) {
+  const s = result.score;
+  const pct = Math.round(s * 100);
+
+  // Score number
+  const numEl = document.getElementById('score-num');
+  numEl.textContent = pct + '%';
+  numEl.style.color = getBarColor(s);
+
+  // Sub label
+  document.getElementById('score-sub').textContent =
+    s >= 0.85 ? '✓ High confidence — human' :
+    s >= 0.55 ? '⚠ Ambiguous — challenge triggered' :
+                '✗ Low confidence — suspected bot';
+  document.getElementById('score-sub').style.color =
+    s >= 0.85 ? 'var(--green)' : s >= 0.55 ? 'var(--amber)' : 'var(--red)';
+
+  // Decision badge
+  const badge = document.getElementById('decision-badge');
+  badge.className = 'decision ' + result.decision;
+  badge.textContent =
+    result.decision === 'pass' ? '✓ ACCESS GRANTED' :
+    result.decision === 'challenge' ? '⚠ SOFT CHALLENGE' :
+    '✗ BOT SUSPECTED — BLOCKED';
+
+  // Draw gauge
+  drawGauge(s);
+
+  // Signal bars
+  const sigs = result.signals || {};
+  const mouse_s = sigs.mouse || {};
+  const key_s = sigs.keyboard || {};
+  const dev_s = sigs.device || {};
+  const time_s = sigs.timing || {};
+
+  const mouseScore = Math.max(0, 1 - (mouse_s.bot_like_linearity || 0.5));
+  const keyScore = Math.min(1, (key_s.typing_rhythm_score || 0) + 0.3);
+  const devScore = dev_s.device_entropy_score || 0.5;
+  const timeScore = Math.max(0, 1
+    - (time_s.immediate_action || 0) * 0.5
+    - (time_s.high_request_rate || 0) * 0.4
+    + (time_s.natural_dwell || 0) * 0.3);
+
+  function setBar(id, val, sv) {
+    const pct2 = Math.round(val * 100);
+    document.getElementById('sb-' + id).style.width = pct2 + '%';
+    document.getElementById('sb-' + id).style.background = getBarColor(val);
+    document.getElementById('sv-' + id).textContent = pct2 + '%';
+  }
+  setBar('mouse', mouseScore);
+  setBar('key', keyScore);
+  setBar('dev', devScore);
+  setBar('time', timeScore);
+
+  // Flags
+  const flags = result.flags || [];
+  const flagEl = document.getElementById('flag-list');
+  if (flags.length === 0) {
+    flagEl.innerHTML = '<span class="no-flags">// No flags detected</span>';
+  } else {
+    flagEl.innerHTML = flags.map(f =>
+      `<span class="flag-tag">${f}</span>`
+    ).join('');
+  }
+}
+
+// ═══════════════════════════════════════════
+// Gauge Canvas
+// ═══════════════════════════════════════════
+function drawGauge(score) {
+  const canvas = document.getElementById('gauge');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 160, 100);
+
+  const cx = 80, cy = 90, r = 70;
+  const startAngle = Math.PI;
+  const endAngle = 0; // 180° sweep
+
+  // Track
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startAngle, endAngle);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Fill
+  const fillEnd = startAngle + score * Math.PI;
+  const color = score > 0.75 ? '#22d3a0' : score > 0.5 ? '#f59e0b' : '#f43f5e';
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, startAngle, fillEnd);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 10;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Zone ticks
+  [[0.55, '#f59e0b'], [0.85, '#22d3a0']].forEach(([threshold, c]) => {
+    const angle = startAngle + threshold * Math.PI;
+    const ix = cx + (r - 14) * Math.cos(angle);
+    const iy = cy + (r - 14) * Math.sin(angle);
+    const ox = cx + (r + 4) * Math.cos(angle);
+    const oy = cy + (r + 4) * Math.sin(angle);
+    ctx.beginPath();
+    ctx.moveTo(ix, iy);
+    ctx.lineTo(ox, oy);
+    ctx.strokeStyle = c;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+}
+
+drawGauge(0);
+
+// ═══════════════════════════════════════════
+// Verify — calls backend or falls back to
+// client-side scoring for demo
+// ═══════════════════════════════════════════
+async function verify() {
+  const payload = SDK.getPayload();
+  logTelemetry('→ sending verification payload…');
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) throw new Error('API error');
+    const result = await res.json();
+    document.getElementById('api-status').textContent = '⬤ LIVE API';
+    document.getElementById('api-status').style.color = 'var(--green)';
+    logTelemetry(`← score=${result.score} decision=${result.decision} (${result.ms}ms)`);
+    return result;
+  } catch (e) {
+    // Client-side fallback scoring for demo
+    logTelemetry('← API offline · using local scorer');
+    return clientSideScore(payload);
+  }
+}
+
+function clientSideScore(payload) {
+  const mouse = payload.mouse || [];
+  const keys = payload.keys || [];
+  const timing = payload.timing || {};
+  const device = payload.device || {};
+
+  let score = 0.5;
+  const flags = [];
+
+  // Mouse analysis
+  if (mouse.length > 10) {
+    const moves = mouse.filter(e => e.type === 'move');
+    if (moves.length > 5) {
+      let totalDist = 0, euclidean = 0;
+      for (let i = 1; i < moves.length; i++) {
+        const dx = moves[i].x - moves[i-1].x;
+        const dy = moves[i].y - moves[i-1].y;
+        totalDist += Math.sqrt(dx*dx + dy*dy);
+      }
+      const endDx = moves[moves.length-1].x - moves[0].x;
+      const endDy = moves[moves.length-1].y - moves[0].y;
+      euclidean = Math.sqrt(endDx*endDx + endDy*endDy);
+      const straightness = euclidean / Math.max(totalDist, 1);
+      if (straightness < 0.6) score += 0.15;
+      else if (straightness > 0.9) { score -= 0.2; flags.push('linear_mouse_path'); }
+    }
+    score += 0.1; // has mouse data
+  } else {
+    flags.push('limited_behavioral_signals');
+  }
+
+  // Keyboard
+  if (keys.length > 4) {
+    const downs = keys.filter(e => e.type === 'down');
+    if (downs.length > 2) {
+      const span = downs[downs.length-1].t - downs[0].t;
+      const kps = downs.length / Math.max(span/1000, 0.1);
+      if (kps > 12) { score -= 0.3; flags.push('superhuman_typing_speed'); }
+      else score += 0.1;
+    }
+    score += 0.05;
+  }
+
+  // Device
+  let devS = 0.5;
+  if (device.canvas_hash) devS += 0.15;
+  if (device.webgl) devS += 0.1;
+  if (device.font_count > 5) devS += 0.15;
+  if (device.audio_hash) devS += 0.1;
+  score = score * 0.6 + devS * 0.4;
+
+  // Timing
+  const tti = timing.time_to_interact || 9999;
+  if (tti < 100) { score -= 0.2; flags.push('immediate_form_action'); }
+  else if (tti > 500 && tti < 30000) score += 0.1;
+
+  const dur = timing.session_duration || 0;
+  if (dur > 2000) score += 0.1;
+
+  score = Math.max(0.05, Math.min(0.99, score));
+  const decision = score >= 0.85 ? 'pass' : score >= 0.55 ? 'challenge' : 'block';
+
+  return {
+    score: Math.round(score * 10000) / 10000,
+    decision,
+    flags,
+    signals: {
+      mouse: { bot_like_linearity: 1 - Math.min(1, mouse.length / 50) },
+      keyboard: { typing_rhythm_score: Math.min(1, keys.length / 20), avg_dwell: 80 },
+      device: { device_entropy_score: devS, device_flags: [] },
+      timing: { immediate_action: tti < 100 ? 1 : 0, natural_dwell: dur > 2000 ? 1 : 0, high_request_rate: 0 },
+    },
+    ms: 1.2,
+  };
+}
+
+// ═══════════════════════════════════════════
+// Form submit handler
+// ═══════════════════════════════════════════
+async function handleSubmit() {
+  const result = await verify();
+  updateUI(result);
+
+  if (result.decision === 'challenge') {
+    showChallenge(result);
+  } else if (result.decision === 'block') {
+    document.getElementById('watch-msg').textContent =
+      '⚠ Bot activity detected. Access denied.';
+    document.getElementById('watch-msg').style.color = 'var(--red)';
+  } else {
+    document.getElementById('watch-msg').textContent =
+      '✓ Human verified. Access granted.';
+    document.getElementById('watch-msg').style.color = 'var(--green)';
+  }
+}
+
+// Auto-score periodically as user interacts
+let autoTimer = null;
+['inp-email', 'inp-pass'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    clearTimeout(autoTimer);
+    autoTimer = setTimeout(async () => {
+      const result = await verify();
+      updateUI(result);
+    }, 800);
+  });
+});
+
+// ═══════════════════════════════════════════
+// Challenge overlay
+// ═══════════════════════════════════════════
+let challengeAttempts = 0;
+function showChallenge(result) {
+  document.getElementById('challenge-overlay').classList.add('active');
+  moveTarget();
+}
+function closeChallenge() {
+  document.getElementById('challenge-overlay').classList.remove('active');
+}
+
+function moveTarget() {
+  const area = document.getElementById('challenge-area');
+  const t = document.getElementById('challenge-target');
+  const maxX = area.clientWidth - 48;
+  const maxY = area.clientHeight - 48;
+  const x = Math.random() * maxX;
+  const y = Math.random() * maxY;
+  t.style.left = x + 'px';
+  t.style.top = y + 'px';
+}
+
+document.getElementById('challenge-target').addEventListener('click', () => {
+  challengeAttempts++;
+  document.getElementById('challenge-hint').textContent = '✓ Human gesture detected!';
+  document.getElementById('challenge-hint').style.color = 'var(--green)';
+  setTimeout(() => {
+    closeChallenge();
+    const fakeBoost = { score: 0.91, decision: 'pass', flags: [],
+      signals: {
+        mouse: { bot_like_linearity: 0.1 },
+        keyboard: { typing_rhythm_score: 0.6, avg_dwell: 95 },
+        device: { device_entropy_score: 0.82, device_flags: [] },
+        timing: { immediate_action: 0, natural_dwell: 1, high_request_rate: 0 },
+      }, ms: 2.1 };
+    updateUI(fakeBoost);
+    document.getElementById('watch-msg').textContent = '✓ Challenge passed. Access granted.';
+    document.getElementById('watch-msg').style.color = 'var(--green)';
+  }, 800);
+});
+
+document.getElementById('challenge-area').addEventListener('mousemove', moveTarget);
+
+// ═══════════════════════════════════════════
+// Simulation buttons
+// ═══════════════════════════════════════════
+function simulateHuman() {
+  logTelemetry('// Injecting HUMAN session simulation…');
+  const result = {
+    score: 0.87 + Math.random() * 0.1,
+    decision: 'pass',
+    flags: [],
+    signals: {
+      mouse: { bot_like_linearity: 0.12, mouse_entropy: 0.62, direction_changes: 0.55, micro_pauses: 7 },
+      keyboard: { typing_rhythm_score: 0.71, avg_dwell: 112, dwell_variance: 890, superhuman_speed: 0 },
+      device: { device_entropy_score: 0.88, device_flags: [] },
+      timing: { immediate_action: 0, natural_dwell: 1, high_request_rate: 0, time_to_interact_ms: 1840 },
+    },
+    ms: 3.7,
+  };
+  result.score = Math.round(result.score * 10000) / 10000;
+  logTelemetry(`← score=${result.score} decision=pass`);
+  updateUI(result);
+  document.getElementById('watch-msg').textContent = '✓ Simulated human: natural patterns detected.';
+  document.getElementById('watch-msg').style.color = 'var(--green)';
+}
+
+function simulateBot() {
+  logTelemetry('// Injecting BOT session simulation…');
+  const result = {
+    score: 0.18 + Math.random() * 0.15,
+    decision: 'block',
+    flags: ['linear_mouse_path', 'zero_mouse_entropy', 'robotic_dwell_uniformity', 'immediate_form_action', 'device:no_fonts', 'headless_browser_suspected'],
+    signals: {
+      mouse: { bot_like_linearity: 0.97, mouse_entropy: 0.01, direction_changes: 0.02, micro_pauses: 0 },
+      keyboard: { typing_rhythm_score: 0.02, avg_dwell: 50, dwell_variance: 2, superhuman_speed: 1 },
+      device: { device_entropy_score: 0.14, device_flags: ['no_fonts', 'no_webgl', 'suspicious_screen'] },
+      timing: { immediate_action: 1, natural_dwell: 0, high_request_rate: 1, time_to_interact_ms: 42 },
+    },
+    ms: 2.1,
+  };
+  result.score = Math.round(result.score * 10000) / 10000;
+  logTelemetry(`← score=${result.score} decision=block [${result.flags.length} flags]`);
+  updateUI(result);
+  document.getElementById('watch-msg').textContent = '⚠ Bot detected. Linear paths, zero variance, headless browser.';
+  document.getElementById('watch-msg').style.color = 'var(--red)';
+}
+</script>
+</body>
+</html>
